@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git 'https://github.com/karthik133013/devops-project.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t karthik1330/devops-app .'
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'karthik1330', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push your-dockerhub-username/devops-app'
+                }
+            }
+        }
+        stage('Deploy to AWS') {
+            steps {
+                sh 'ssh -i your-key.pem ec2-user@your-ec2-ip "docker run -d -p 80:80 your-dockerhub-username/devops-app"'
+            }
+        }
+    }
+}
